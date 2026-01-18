@@ -7,10 +7,9 @@ import { createClient } from '@supabase/supabase-js'
 
 // --- SETUP SUPABASE ---
 // (We initialize this outside the component to avoid recreating it on every render)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co"
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
 const supabase = createClient(supabaseUrl, supabaseKey)
-
 // --- PART 1: THE REAL CONTENT ---
 // This component reads the URL, so it MUST be wrapped in Suspense later.
 function ReportForm() {
