@@ -1,176 +1,156 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Fan, Wind, Lightbulb, Plug, Projector, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation" 
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2 } from "lucide-react"
+import { createClient } from '@supabase/supabase-js'
 
-export default function Home() {
-  const searchParams = useSearchParams();
-  const room = searchParams.get('room') || 'Scan a QR Code';
+// --- SETUP SUPABASE ---
+// (We initialize this outside the component to avoid recreating it on every render)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// --- PART 1: THE REAL CONTENT ---
+// This component reads the URL, so it MUST be wrapped in Suspense later.
+function ReportForm() {
+  const searchParams = useSearchParams()
+  const roomID = searchParams.get("room") || "Scan a QR Code"
   
-  const [submittingIssue, setSubmittingIssue] = useState<string | null>(null);
-  const [successIssue, setSuccessIssue] = useState<string | null>(null);
-  const [errorIssue, setErrorIssue] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [selectedIssue, setSelectedIssue] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
   const issues = [
-    { id: 'fan', label: 'Fan', icon: Fan },
-    { id: 'ac', label: 'AC', icon: Wind },
-    { id: 'light', label: 'Light', icon: Lightbulb },
-    { id: 'socket', label: 'Socket', icon: Plug },
-    { id: 'projector', label: 'Projector', icon: Projector },
-  ];
+    { id: "fan", label: "Fan Issue", icon: Fan },
+    { id: "ac", label: "AC / Cooling", icon: Snowflake },
+    { id: "light", label: "Lights / Tubelight", icon: Lightbulb },
+    { id: "socket", label: "Socket / Plug", icon: Plug },
+    { id: "projector", label: "Projector", icon: Projector },
+  ]
 
-  const handleIssueClick = async (issueId: string) => {
-    // Don't submit if room is not set (default "Scan a QR Code")
-    if (room === 'Scan a QR Code') {
-      setErrorIssue(issueId);
-      setErrorMessage('Please scan a QR code first to identify the room');
-      setTimeout(() => {
-        setErrorIssue(null);
-        setErrorMessage('');
-      }, 4000);
-      return;
-    }
-
-    setSubmittingIssue(issueId);
-    setSuccessIssue(null);
-    setErrorIssue(null);
-    setErrorMessage('');
+  const handleSubmit = async () => {
+    if (!selectedIssue) return alert("Please select an issue first.")
+    
+    setIsSubmitting(true)
 
     try {
-      const { data, error } = await supabase
+      // Send data to Supabase
+      const { error } = await supabase
         .from('reports')
         .insert([
-          {
-            room: room,
-            issue: issues.find(i => i.id === issueId)?.label || issueId,
-            status: 'Pending',
-            reported_at: new Date().toISOString(),
+          { 
+            room_id: roomID, 
+            issue: selectedIssue, 
+            status: 'Pending' 
+            // created_at is auto-handled by Supabase usually
           },
         ])
-        .select();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error
 
-      // Success
-      setSubmittingIssue(null);
-      setSuccessIssue(issueId);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessIssue(null);
-      }, 3000);
-    } catch (error: any) {
-      // Handle error gracefully
-      console.error('Error submitting report:', error);
-      setSubmittingIssue(null);
-      setErrorIssue(issueId);
-      setErrorMessage(
-        error?.message || 'Failed to submit report. Please try again.'
-      );
-      
-      // Clear error message after 4 seconds
-      setTimeout(() => {
-        setErrorIssue(null);
-        setErrorMessage('');
-      }, 4000);
+      setIsSuccess(true)
+    } catch (err) {
+      console.error("Error submitting:", err)
+      alert("Failed to submit report. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-  };
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-green-50 p-4 text-center animate-in fade-in zoom-in duration-300">
+        <div className="bg-white p-6 rounded-full shadow-lg mb-6">
+           <CheckCircle className="w-16 h-16 text-green-500" />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Report Sent!</h1>
+        <p className="text-gray-600 max-w-xs mx-auto">
+          Maintenance has been notified about the <strong>{selectedIssue}</strong> in <strong>{roomID}</strong>.
+        </p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-8 px-8 py-3 bg-green-600 text-white rounded-full font-bold shadow-md hover:bg-green-700 transition-colors"
+        >
+          Report Another Issue
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-900 mb-2">
-            College Maintenance
-          </h1>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full">
-            <span className="text-blue-800 font-semibold">Room:</span>
-            <span className="text-blue-900 font-bold text-lg">{room}</span>
-          </div>
-        </header>
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* Header */}
+      <div className="bg-blue-600 p-8 pt-12 text-white rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
+        <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1">Campus Maintenance</p>
+        <h1 className="text-4xl font-extrabold tracking-tight">{roomID}</h1>
+        <p className="text-blue-100 mt-2 text-sm opacity-90">What needs fixing today?</p>
+      </div>
 
-        {/* Error Message */}
-        {errorMessage && (
-          <div className="mb-4 p-4 bg-red-100 border-2 border-red-300 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-800 font-medium">{errorMessage}</p>
-          </div>
-        )}
-
-        {/* Issues Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {issues.map((issue) => {
-            const Icon = issue.icon;
-            const isSubmitting = submittingIssue === issue.id;
-            const isSuccess = successIssue === issue.id;
-            const isError = errorIssue === issue.id;
-            
+      {/* Grid of Options */}
+      <div className="flex-1 p-6 -mt-2">
+        <div className="grid grid-cols-2 gap-4">
+          {issues.map((item) => {
+            const Icon = item.icon
+            const isSelected = selectedIssue === item.label
             return (
               <button
-                key={issue.id}
-                onClick={() => handleIssueClick(issue.id)}
-                disabled={isSubmitting || isSuccess}
-                className={`
-                  relative flex flex-col items-center justify-center
-                  p-8 rounded-xl shadow-lg
-                  transition-all duration-300
-                  ${isSuccess 
-                    ? 'bg-green-500 text-white scale-105' 
-                    : isError
-                    ? 'bg-red-500 text-white scale-105'
-                    : isSubmitting
-                    ? 'bg-blue-400 text-white cursor-wait'
-                    : 'bg-white text-blue-900 hover:bg-blue-50 hover:shadow-xl hover:scale-105 active:scale-95'
-                  }
-                  border-2 ${
-                    isSuccess ? 'border-green-600' 
-                    : isError ? 'border-red-600'
-                    : 'border-blue-200'
-                  }
-                  disabled:opacity-90
-                `}
+                key={item.id}
+                onClick={() => setSelectedIssue(item.label)}
+                className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-200 shadow-sm group
+                  ${isSelected 
+                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 scale-[1.02]" 
+                    : "border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:shadow-md"
+                  }`}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-3"></div>
-                    <span className="text-lg font-semibold">Submitting...</span>
-                  </>
-                ) : isSuccess ? (
-                  <>
-                    <div className="mb-3">
-                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-lg font-semibold">Success!</span>
-                  </>
-                ) : isError ? (
-                  <>
-                    <AlertCircle className="w-12 h-12 mb-3" />
-                    <span className="text-lg font-semibold">Error</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon className="w-16 h-16 mb-4 text-blue-600" />
-                    <span className="text-xl font-semibold">{issue.label}</span>
-                  </>
-                )}
+                <div className={`p-3 rounded-full mb-3 transition-colors ${isSelected ? "bg-blue-200" : "bg-gray-100 group-hover:bg-blue-50"}`}>
+                   <Icon className={`w-8 h-8 ${isSelected ? "text-blue-700" : "text-gray-500 group-hover:text-blue-600"}`} />
+                </div>
+                <span className="font-bold text-sm">{item.label}</span>
               </button>
-            );
+            )
           })}
         </div>
+      </div>
 
-        {/* Footer */}
-        <footer className="text-center text-blue-700 text-sm mt-8">
-          <p>Select an issue to report maintenance request</p>
-        </footer>
+      {/* Submit Button */}
+      <div className="p-6 bg-white border-t border-gray-100 safe-area-pb">
+        <button
+          onClick={handleSubmit}
+          disabled={!selectedIssue || isSubmitting}
+          className={`w-full py-4 rounded-xl text-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2
+            ${!selectedIssue 
+              ? "bg-gray-300 cursor-not-allowed" 
+              : isSubmitting 
+                ? "bg-blue-400 cursor-wait" 
+                : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
+            }`}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            "Submit Report"
+          )}
+        </button>
       </div>
     </div>
-  );
+  )
+}
+
+// --- PART 2: THE MAIN PAGE WRAPPER ---
+// This handles the "Loading..." state while checking the URL
+export default function ReportPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-blue-600">
+        <Loader2 className="w-10 h-10 animate-spin" />
+      </div>
+    }>
+      <ReportForm />
+    </Suspense>
+  )
 }
