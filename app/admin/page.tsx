@@ -52,6 +52,19 @@ export default function AdminDashboard() {
     }
   }
 
+  // --- NEW: DATE FORMATTER HELPER ---
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(date)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Top Navbar */}
@@ -88,6 +101,7 @@ export default function AdminDashboard() {
                 No active issues. Good job!
               </div>
             ) : (
+              // THIS IS THE CORRECTED MAP SECTION
               activeJobs.map((job) => (
                 <div key={job.id} className="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-orange-500 flex justify-between items-center group hover:shadow-md transition-all">
                   <div>
@@ -95,7 +109,9 @@ export default function AdminDashboard() {
                       <MapPin className="w-3 h-3" /> {job.room_id}
                     </div>
                     <h3 className="text-lg font-bold text-slate-800">{job.issue}</h3>
-                    <p className="text-xs text-slate-400 mt-1">{new Date(job.created_at).toLocaleTimeString()}</p>
+                    <p className="text-xs text-slate-500 font-medium mt-1 bg-slate-100 inline-block px-2 py-1 rounded">
+                      {formatDate(job.created_at)}
+                    </p>
                   </div>
                   <button onClick={() => markAsDone(job.id)} className="bg-slate-100 hover:bg-green-500 hover:text-white text-slate-600 px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" /> Done
@@ -135,5 +151,3 @@ function StatCard({ title, value, color, icon }: any) {
     </div>
   )
 }
-
-// Updated admin design
