@@ -135,3 +135,5 @@ function StatCard({ title, value, color, icon }: any) {
     </div>
   )
 }
+
+// Updated admin design
