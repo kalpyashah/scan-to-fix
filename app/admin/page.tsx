@@ -10,7 +10,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-ke
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // --- CONFIG ---
-const ADMIN_PIN = "2024" // <--- CHANGE THIS TO YOUR DESIRED PIN
+const ADMIN_PIN = "2024" // <--- YOUR PIN
 
 type Report = {
   id: number
@@ -34,17 +34,18 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedJob, setSelectedJob] = useState<Report | null>(null)
 
-  // 1. CHECK LOGIN ON LOAD
+  // 1. CHECK LOGIN ON LOAD (Using sessionStorage now)
   useEffect(() => {
-    const savedToken = localStorage.getItem("admin_access")
+    // sessionStorage is cleared when the tab/browser is closed
+    const savedToken = sessionStorage.getItem("admin_access")
     if (savedToken === "granted") {
       setIsAuthenticated(true)
-      fetchReports() // Start fetching immediately if logged in
+      fetchReports() 
       setupRealtime()
     }
   }, [])
 
-  // 2. SETUP REALTIME (Moved to function so we call it only after login)
+  // 2. SETUP REALTIME 
   const setupRealtime = () => {
     const channel = supabase
       .channel('realtime reports')
@@ -59,7 +60,8 @@ export default function AdminDashboard() {
     e.preventDefault()
     if (pinInput === ADMIN_PIN) {
       setIsAuthenticated(true)
-      localStorage.setItem("admin_access", "granted")
+      // Save only for this session
+      sessionStorage.setItem("admin_access", "granted")
       fetchReports()
       setupRealtime()
     } else {
@@ -70,7 +72,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     setIsAuthenticated(false)
-    localStorage.removeItem("admin_access")
+    sessionStorage.removeItem("admin_access")
     setPinInput("")
   }
 
