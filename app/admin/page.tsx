@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from '@supabase/supabase-js'
-import { CheckCircle, Clock, Hammer, RefreshCw, BarChart3, MapPin } from "lucide-react"
+import { CheckCircle, Clock, Hammer, RefreshCw, BarChart3, MapPin, Search, ChevronDown, ChevronUp, X, Calendar } from "lucide-react"
 
 // --- SUPABASE SETUP ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co"
@@ -15,12 +15,18 @@ type Report = {
   issue: string
   status: string
   created_at: string
+  solved_at: string | null
 }
 
 export default function AdminDashboard() {
   const [activeJobs, setActiveJobs] = useState<Report[]>([])
   const [historyJobs, setHistoryJobs] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // NEW STATES
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedJob, setSelectedJob] = useState<Report | null>(null) // For the details popup
 
   useEffect(() => {
     fetchReports()
@@ -46,17 +52,22 @@ export default function AdminDashboard() {
   const markAsDone = async (id: number) => {
     const job = activeJobs.find(j => j.id === id)
     if (job) {
+      const solvedTime = new Date().toISOString()
+      
+      // Update UI instantly
       setActiveJobs(activeJobs.filter(j => j.id !== id))
-      setHistoryJobs([{ ...job, status: 'Completed' }, ...historyJobs])
-      await supabase.from('reports').update({ status: 'Completed' }).eq('id', id)
+      setHistoryJobs([{ ...job, status: 'Completed', solved_at: solvedTime }, ...historyJobs])
+      
+      // Update DB with the new 'solved_at' time
+      await supabase.from('reports').update({ status: 'Completed', solved_at: solvedTime }).eq('id', id)
     }
   }
 
-  // --- NEW: DATE FORMATTER HELPER ---
+  // Helper to format date cleanly
   const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A"
     const date = new Date(dateString)
     return new Intl.DateTimeFormat('en-GB', {
-      weekday: 'short',
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
@@ -65,8 +76,64 @@ export default function AdminDashboard() {
     }).format(date)
   }
 
+  // Filter History based on Search
+  const filteredHistory = historyJobs.filter(job => 
+    job.room_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.issue.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 relative">
+      
+      {/* DETAILS MODAL POPUP */}
+      {selectedJob && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="bg-slate-900 p-6 flex justify-between items-start">
+              <div>
+                <h2 className="text-white text-2xl font-bold flex items-center gap-2">
+                  <CheckCircle className="text-green-400" /> Completed
+                </h2>
+                <p className="text-slate-400 mt-1">{selectedJob.room_id}</p>
+              </div>
+              <button onClick={() => setSelectedJob(null)} className="text-slate-400 hover:text-white">
+                <X />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Issue Reported</label>
+                <p className="text-xl font-bold text-slate-800">{selectedJob.issue}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> Issued
+                  </label>
+                  <p className="font-semibold text-slate-700 mt-1">{formatDate(selectedJob.created_at)}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Solved
+                  </label>
+                  <p className="font-semibold text-green-700 mt-1">
+                    {selectedJob.solved_at ? formatDate(selectedJob.solved_at) : "Unknown"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+              <button onClick={() => setSelectedJob(null)} className="text-slate-500 font-semibold hover:text-slate-800 text-sm">
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <nav className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-10">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
@@ -101,7 +168,6 @@ export default function AdminDashboard() {
                 No active issues. Good job!
               </div>
             ) : (
-              // THIS IS THE CORRECTED MAP SECTION
               activeJobs.map((job) => (
                 <div key={job.id} className="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-orange-500 flex justify-between items-center group hover:shadow-md transition-all">
                   <div>
@@ -122,17 +188,61 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* HISTORY */}
-        <div className="opacity-70 hover:opacity-100 transition-opacity">
-          <h2 className="text-lg font-bold text-slate-700 mb-4">Recent History</h2>
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            {historyJobs.slice(0, 10).map((job) => (
-              <div key={job.id} className="p-4 border-b border-slate-100 flex justify-between items-center hover:bg-slate-50">
-                <span className="font-medium text-slate-600">{job.room_id}: {job.issue}</span>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">FIXED</span>
+        {/* HISTORY SECTION (Collapsible & Searchable) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          
+          {/* Header Toggle */}
+          <button 
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className="w-full flex items-center justify-between p-5 bg-slate-50 hover:bg-slate-100 transition-colors"
+          >
+            <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+              <CheckCircle className="text-green-500 w-5 h-5" /> History Log
+            </h2>
+            {isHistoryOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+          </button>
+
+          {/* Collapsible Content */}
+          {isHistoryOpen && (
+            <div className="p-5 border-t border-slate-200 animate-in slide-in-from-top-2">
+              
+              {/* Search Bar */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search room or issue..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
               </div>
-            ))}
-          </div>
+
+              {/* List */}
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                {filteredHistory.length === 0 ? (
+                  <p className="text-center text-slate-400 py-4 italic">No matching records found.</p>
+                ) : (
+                  filteredHistory.map((job) => (
+                    <div 
+                      key={job.id} 
+                      onClick={() => setSelectedJob(job)}
+                      className="p-4 rounded-lg border border-slate-100 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all flex justify-between items-center group"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-700">{job.room_id}</span>
+                        <span className="text-slate-400 mx-2">•</span>
+                        <span className="text-slate-600">{job.issue}</span>
+                      </div>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold group-hover:bg-blue-200 group-hover:text-blue-800 transition-colors">
+                        View Details
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
       </div>
