@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight } from "lucide-react"
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight, MapPin } from "lucide-react"
 import { createClient } from '@supabase/supabase-js'
 
 // --- SUPABASE SETUP ---
@@ -35,9 +35,9 @@ function HomeContent() {
   const [fullHistory, setFullHistory] = useState<Report[]>([])     
   
   // MODALS
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false) // Full History
-  const [isRecentOpen, setIsRecentOpen] = useState(false)   // Recent Updates
-  const [viewJob, setViewJob] = useState<Report | null>(null) // Specific Job Detail
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false) 
+  const [isRecentOpen, setIsRecentOpen] = useState(false)   
+  const [viewJob, setViewJob] = useState<Report | null>(null) 
 
   // 1. ON LOAD
   useEffect(() => {
@@ -109,9 +109,9 @@ function HomeContent() {
   const isDuplicate = selectedIssue !== "Other" && selectedIssue && pendingIssues.includes(selectedIssue)
 
   return (
-    <main className="min-h-screen bg-gray-50 font-sans pb-48 relative">
+    <main className="min-h-screen bg-slate-50 font-sans pb-48 relative overflow-x-hidden">
       
-      {/* --- MODAL: JOB DETAILS POPUP --- */}
+      {/* --- MODAL: JOB DETAILS --- */}
       {viewJob && (
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95">
@@ -143,9 +143,9 @@ function HomeContent() {
         </div>
       )}
 
-      {/* --- MODAL: RECENT UPDATES LIST --- */}
+      {/* --- MODAL: RECENT UPDATES --- */}
       {isRecentOpen && (
-        <div className="fixed inset-0 z-[60] bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
+        <div className="fixed inset-0 z-[60] bg-slate-50 flex flex-col animate-in slide-in-from-bottom-10">
           <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
             <div>
               <h2 className="text-xl font-bold text-slate-800">Recent Updates</h2>
@@ -170,9 +170,9 @@ function HomeContent() {
         </div>
       )}
 
-      {/* --- MODAL: FULL HISTORY LIST --- */}
+      {/* --- MODAL: FULL HISTORY --- */}
       {isHistoryOpen && (
-        <div className="fixed inset-0 z-[50] bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
+        <div className="fixed inset-0 z-[50] bg-slate-50 flex flex-col animate-in slide-in-from-bottom-10">
           <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
             <h2 className="text-xl font-bold text-slate-800">Full Archive</h2>
             <button onClick={() => setIsHistoryOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-6 h-6 text-gray-600" /></button>
@@ -193,7 +193,7 @@ function HomeContent() {
 
       {/* TOASTS & ALERTS */}
       {status === "success" && (
-        <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300">
+        <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300 max-w-md mx-auto">
           <div className="bg-green-600 text-white p-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-sm bg-opacity-95">
             <CheckCircle className="w-6 h-6 text-white" />
             <div className="flex-1"><h3 className="font-bold text-lg">Sent!</h3><p className="text-green-100 text-sm">Report submitted.</p></div>
@@ -202,7 +202,7 @@ function HomeContent() {
         </div>
       )}
       {liveUpdate && (
-        <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300">
+        <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300 max-w-md mx-auto">
           <div className="bg-white text-slate-800 border-l-4 border-blue-600 p-4 rounded-xl shadow-2xl flex items-center gap-3">
             <Bell className="w-6 h-6 text-blue-600 animate-pulse" />
             <div className="flex-1"><h3 className="font-bold text-lg">Just Fixed!</h3><p className="text-slate-500 text-sm">Technician fixed the <strong>{liveUpdate}</strong>.</p></div>
@@ -211,44 +211,51 @@ function HomeContent() {
         </div>
       )}
 
-      {/* HEADER (UPDATED STYLE) */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-600 px-6 py-10 pb-32 rounded-b-[3rem] shadow-2xl shadow-blue-900/20 relative overflow-hidden z-10">
-        <div className="relative z-10 flex justify-between items-start">
+      {/* --- HEADER (TALLER & CLEANER) --- */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 pb-36 pt-12 px-6 rounded-b-[3rem] shadow-xl relative z-10">
+        <div className="max-w-md mx-auto flex justify-between items-start">
           <div>
-            <p className="text-blue-100 text-sm font-medium uppercase tracking-wider mb-1">Location</p>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">{roomName}</h1>
+            <div className="flex items-center gap-1.5 text-blue-200 mb-1">
+              <MapPin className="w-4 h-4" />
+              <p className="text-sm font-medium uppercase tracking-wider">Location</p>
+            </div>
+            <h1 className="text-4xl font-extrabold text-white tracking-tight">{roomName}</h1>
           </div>
-          {/* HISTORY BUTTON */}
-          <button onClick={() => setIsHistoryOpen(true)} className="bg-white/10 p-3 rounded-xl hover:bg-white/20 text-white transition-colors backdrop-blur-md border border-white/20">
+          {/* HISTORY BUTTON (Glass effect) */}
+          <button onClick={() => setIsHistoryOpen(true)} className="bg-white/10 p-3 rounded-2xl hover:bg-white/20 text-white transition-all backdrop-blur-md border border-white/20 active:scale-95">
             <History className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      <div className="px-6 -mt-16 relative z-20 space-y-6">
+      {/* --- MAIN CONTENT (CENTERED & OVERLAPPING) --- */}
+      <div className="px-6 -mt-24 relative z-20 space-y-5 max-w-md mx-auto">
         
-        {/* RECENT UPDATES TRIGGER (Only shows if recent history exists) */}
+        {/* RECENT UPDATES TRIGGER (Glass Card) */}
         {recentHistory.length > 0 && (
           <button 
             onClick={() => setIsRecentOpen(true)}
-            className="w-full bg-white rounded-2xl p-4 shadow-xl shadow-blue-900/5 border border-white animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between group active:scale-95 transition-all"
+            className="w-full bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/40 flex items-center justify-between group active:scale-95 transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 text-blue-600 p-2 rounded-full">
+              <div className="bg-blue-100 text-blue-600 p-2.5 rounded-full ring-4 ring-white">
                 <Bell className="w-5 h-5" />
               </div>
               <div className="text-left">
                 <h2 className="text-sm font-bold text-slate-800">Recent Updates</h2>
-                <p className="text-xs text-slate-500">{recentHistory.length} issues fixed in last 24h</p>
+                <p className="text-xs text-slate-500 font-medium">{recentHistory.length} issues fixed in last 24h</p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </button>
         )}
 
-        {/* ISSUE GRID */}
-        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-gray-100">
-          <h2 className="text-gray-800 font-bold text-lg mb-6 flex items-center gap-2"><AlertCircle className="w-5 h-5 text-orange-500" /> What is broken?</h2>
+        {/* ISSUE GRID (Solid Card) */}
+        <div className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+          <h2 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-orange-500" /> 
+            What is broken?
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             <IssueButton icon={<Fan />} label="Fan" isSelected={selectedIssue === "Fan"} onClick={() => setSelectedIssue("Fan")} />
             <IssueButton icon={<Snowflake />} label="AC" isSelected={selectedIssue === "AC"} onClick={() => setSelectedIssue("AC")} />
@@ -260,25 +267,30 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* FOOTER */}
+      {/* --- FOOTER (STICKY) --- */}
       {selectedIssue && (
-        <div className="fixed bottom-0 left-0 w-full p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-4 z-40">
-          {selectedIssue === "Other" && (
-            <div className="mb-4">
-              <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Describe the issue</label>
-              <input autoFocus type="text" placeholder="e.g. Broken window handle..." value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800 font-medium" />
-            </div>
-          )}
-          {isDuplicate ? (
-            <div className="w-full bg-orange-100 border border-orange-200 text-orange-800 p-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
-              <Loader2 className="animate-spin text-orange-600" />
-              <div className="text-left"><p className="font-bold text-sm">Work in Progress</p><p className="text-xs opacity-80">Already reported.</p></div>
-            </div>
-          ) : (
-            <button onClick={handleSubmit} disabled={status === "submitting" || (selectedIssue === "Other" && customText.length < 3)} className="w-full bg-blue-600 disabled:bg-gray-300 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-              {status === "submitting" ? <Loader2 className="animate-spin" /> : "Submit Report"}
-            </button>
-          )}
+        <div className="fixed bottom-0 left-0 w-full z-40">
+           {/* Center the footer content on wide screens */}
+           <div className="max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-6 rounded-t-3xl animate-in slide-in-from-bottom-4">
+              
+              {selectedIssue === "Other" && (
+                <div className="mb-4">
+                  <label className="text-xs font-bold text-slate-400 uppercase mb-2 block ml-1">Describe the issue</label>
+                  <input autoFocus type="text" placeholder="e.g. Broken window handle..." value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-medium" />
+                </div>
+              )}
+
+              {isDuplicate ? (
+                <div className="w-full bg-orange-50 border border-orange-100 text-orange-800 p-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
+                  <Loader2 className="animate-spin text-orange-600" />
+                  <div className="text-left"><p className="font-bold text-sm">Work in Progress</p><p className="text-xs opacity-80">Technicians are already aware.</p></div>
+                </div>
+              ) : (
+                <button onClick={handleSubmit} disabled={status === "submitting" || (selectedIssue === "Other" && customText.length < 3)} className="w-full bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 text-white text-lg font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  {status === "submitting" ? <Loader2 className="animate-spin" /> : "Submit Report"}
+                </button>
+              )}
+           </div>
         </div>
       )}
     </main>
@@ -287,16 +299,16 @@ function HomeContent() {
 
 function IssueButton({ icon, label, isSelected, onClick }: { icon: any, label: string, isSelected: boolean, onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-200 border ${isSelected ? "bg-blue-50 border-blue-500 shadow-inner scale-95 ring-2 ring-blue-500 ring-offset-2" : "bg-gray-50 border-gray-100 hover:bg-white hover:shadow-md"}`}>
-      <div className={`transition-colors [&>svg]:w-8 [&>svg]:h-8 ${isSelected ? "text-blue-600" : "text-gray-400"}`}>{icon}</div>
-      <span className={`font-semibold ${isSelected ? "text-blue-700" : "text-gray-700"}`}>{label}</span>
+    <button onClick={onClick} className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-200 border ${isSelected ? "bg-blue-50 border-blue-500 shadow-inner scale-95 ring-2 ring-blue-500 ring-offset-2" : "bg-slate-50 border-slate-100 hover:bg-white hover:shadow-md hover:border-slate-200"}`}>
+      <div className={`transition-colors [&>svg]:w-8 [&>svg]:h-8 ${isSelected ? "text-blue-600" : "text-slate-400"}`}>{icon}</div>
+      <span className={`font-semibold ${isSelected ? "text-blue-700" : "text-slate-600"}`}>{label}</span>
     </button>
   )
 }
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>}>
       <HomeContent />
     </Suspense>
   )
