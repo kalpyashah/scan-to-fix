@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, History, PenTool, ChevronRight, MapPin } from "lucide-react"
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight, MapPin } from "lucide-react"
 import { createClient } from '@supabase/supabase-js'
 
 // --- SUPABASE SETUP ---
@@ -111,40 +111,66 @@ function HomeContent() {
   return (
     <main className="min-h-screen bg-slate-50 font-sans pb-48 relative overflow-x-hidden">
       
-      {/* --- MODALS --- */}
+      {/* --- MODAL: JOB DETAILS --- */}
       {viewJob && (
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95">
             <div className="bg-slate-900 p-6 flex justify-between items-start">
-              <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Details</p><h2 className="text-white text-xl font-bold">{viewJob.issue.replace("Other: ", "")}</h2></div>
+              <div>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Repair Details</p>
+                <h2 className="text-white text-xl font-bold">{viewJob.issue.replace("Other: ", "")}</h2>
+              </div>
               <button onClick={() => setViewJob(null)} className="bg-slate-800 p-2 rounded-full text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-6">
               <div className="relative border-l-2 border-slate-100 ml-3 space-y-8 py-2">
-                <div className="relative pl-6"><div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white"></div><label className="text-xs font-bold text-slate-400 uppercase">Reported</label><p className="text-slate-800 font-semibold">{formatDateTime(viewJob.created_at)}</p></div>
-                <div className="relative pl-6"><div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg shadow-green-200"></div><label className="text-xs font-bold text-green-600 uppercase">Fixed</label><p className="text-slate-800 font-semibold">{formatDateTime(viewJob.solved_at)}</p></div>
+                <div className="relative pl-6">
+                  <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white"></div>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Reported On</label>
+                  <p className="text-slate-800 font-semibold">{formatDateTime(viewJob.created_at)}</p>
+                </div>
+                <div className="relative pl-6">
+                  <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg shadow-green-200"></div>
+                  <label className="text-xs font-bold text-green-600 uppercase">Fixed On</label>
+                  <p className="text-slate-800 font-semibold">{formatDateTime(viewJob.solved_at)}</p>
+                </div>
               </div>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+              <button onClick={() => setViewJob(null)} className="text-slate-500 font-semibold text-sm hover:text-slate-800">Close</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* --- MODAL: RECENT UPDATES --- */}
       {isRecentOpen && (
         <div className="fixed inset-0 z-[60] bg-slate-50 flex flex-col animate-in slide-in-from-bottom-10">
           <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
-            <div><h2 className="text-xl font-bold text-slate-800">Recent Updates</h2><p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Last 24 Hours</p></div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Recent Updates</h2>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Last 24 Hours</p>
+            </div>
             <button onClick={() => setIsRecentOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-6 h-6 text-gray-600" /></button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-3">
             {recentHistory.map(job => (
               <div key={job.id} onClick={() => setViewJob(job)} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between active:scale-95 transition-transform">
-                <div className="flex items-center gap-3"><div className="bg-green-100 p-2 rounded-full"><CheckCircle className="w-5 h-5 text-green-600" /></div><div><p className="font-semibold text-slate-700">{job.issue.replace("Other: ", "")}</p><p className="text-xs text-gray-400 mt-0.5">Fixed {new Date(job.solved_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div></div><ChevronRight className="w-5 h-5 text-gray-300" />
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-full"><CheckCircle className="w-5 h-5 text-green-600" /></div>
+                  <div>
+                    <p className="font-semibold text-slate-700">{job.issue.replace("Other: ", "")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Fixed {new Date(job.solved_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* --- MODAL: FULL HISTORY --- */}
       {isHistoryOpen && (
         <div className="fixed inset-0 z-[50] bg-slate-50 flex flex-col animate-in slide-in-from-bottom-10">
           <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
@@ -154,51 +180,58 @@ function HomeContent() {
           <div className="flex-1 overflow-y-auto p-6 space-y-3">
             {fullHistory.length === 0 ? <p className="text-center text-gray-400 mt-10">No records found.</p> : fullHistory.map(job => (
               <div key={job.id} onClick={() => setViewJob(job)} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-95 transition-transform">
-                <div><p className="font-semibold text-slate-700">{job.issue.replace("Other: ", "")}</p><p className="text-xs text-gray-400 mt-1">{new Date(job.solved_at).toLocaleDateString()}</p></div><ChevronRight className="w-5 h-5 text-gray-300" />
+                <div>
+                  <p className="font-semibold text-slate-700">{job.issue.replace("Other: ", "")}</p>
+                  <p className="text-xs text-gray-400 mt-1">{new Date(job.solved_at).toLocaleDateString()}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* TOASTS */}
+      {/* TOASTS & ALERTS */}
       {status === "success" && (
         <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300 max-w-md mx-auto">
           <div className="bg-green-600 text-white p-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-sm bg-opacity-95">
-            <CheckCircle className="w-6 h-6 text-white" /><div className="flex-1"><h3 className="font-bold text-lg">Sent!</h3><p className="text-green-100 text-sm">Report submitted.</p></div><button onClick={() => setStatus("idle")}><X className="w-5 h-5" /></button>
+            <CheckCircle className="w-6 h-6 text-white" />
+            <div className="flex-1"><h3 className="font-bold text-lg">Sent!</h3><p className="text-green-100 text-sm">Report submitted.</p></div>
+            <button onClick={() => setStatus("idle")}><X className="w-5 h-5" /></button>
           </div>
         </div>
       )}
       {liveUpdate && (
         <div className="fixed top-4 left-4 right-4 z-[100] animate-in slide-in-from-top-5 duration-300 max-w-md mx-auto">
           <div className="bg-white text-slate-800 border-l-4 border-blue-600 p-4 rounded-xl shadow-2xl flex items-center gap-3">
-            <Bell className="w-6 h-6 text-blue-600 animate-pulse" /><div className="flex-1"><h3 className="font-bold text-lg">Just Fixed!</h3><p className="text-slate-500 text-sm">Technician fixed the <strong>{liveUpdate}</strong>.</p></div><button onClick={() => setLiveUpdate(null)}><X className="w-5 h-5 text-slate-400" /></button>
+            <Bell className="w-6 h-6 text-blue-600 animate-pulse" />
+            <div className="flex-1"><h3 className="font-bold text-lg">Just Fixed!</h3><p className="text-slate-500 text-sm">Technician fixed the <strong>{liveUpdate}</strong>.</p></div>
+            <button onClick={() => setLiveUpdate(null)}><X className="w-5 h-5 text-slate-400" /></button>
           </div>
         </div>
       )}
 
-      {/* --- COMPACT HEADER --- */}
-      {/* Reduced padding bottom from pb-36 to pb-24, adjusted curve to 2.5rem */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 pb-24 pt-10 px-6 rounded-b-[2.5rem] shadow-xl relative z-10">
+      {/* --- HEADER (TALLER & CLEANER) --- */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 pb-36 pt-12 px-6 rounded-b-[3rem] shadow-xl relative z-10">
         <div className="max-w-md mx-auto flex justify-between items-start">
           <div>
             <div className="flex items-center gap-1.5 text-blue-200 mb-1">
               <MapPin className="w-4 h-4" />
               <p className="text-sm font-medium uppercase tracking-wider">Location</p>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">{roomName}</h1>
+            <h1 className="text-4xl font-extrabold text-white tracking-tight">{roomName}</h1>
           </div>
+          {/* HISTORY BUTTON (Glass effect) */}
           <button onClick={() => setIsHistoryOpen(true)} className="bg-white/10 p-3 rounded-2xl hover:bg-white/20 text-white transition-all backdrop-blur-md border border-white/20 active:scale-95">
             <History className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      {/* --- MAIN CONTENT (TIGHTER OVERLAP) --- */}
-      {/* Reduced negative margin from -mt-24 to -mt-12 to match the shorter header */}
-      <div className="px-6 -mt-12 relative z-20 space-y-4 max-w-md mx-auto">
+      {/* --- MAIN CONTENT (CENTERED & OVERLAPPING) --- */}
+      <div className="px-6 -mt-24 relative z-20 space-y-5 max-w-md mx-auto">
         
-        {/* RECENT UPDATES BAR */}
+        {/* RECENT UPDATES TRIGGER (Glass Card) */}
         {recentHistory.length > 0 && (
           <button 
             onClick={() => setIsRecentOpen(true)}
@@ -210,14 +243,14 @@ function HomeContent() {
               </div>
               <div className="text-left">
                 <h2 className="text-sm font-bold text-slate-800">Recent Updates</h2>
-                <p className="text-xs text-slate-500 font-medium">{recentHistory.length} fixed today</p>
+                <p className="text-xs text-slate-500 font-medium">{recentHistory.length} issues fixed in last 24h</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </button>
         )}
 
-        {/* ISSUE GRID */}
+        {/* ISSUE GRID (Solid Card) */}
         <div className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
           <h2 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-orange-500" /> 
@@ -234,16 +267,19 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* --- FOOTER --- */}
+      {/* --- FOOTER (STICKY) --- */}
       {selectedIssue && (
         <div className="fixed bottom-0 left-0 w-full z-40">
+           {/* Center the footer content on wide screens */}
            <div className="max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-6 rounded-t-3xl animate-in slide-in-from-bottom-4">
+              
               {selectedIssue === "Other" && (
                 <div className="mb-4">
                   <label className="text-xs font-bold text-slate-400 uppercase mb-2 block ml-1">Describe the issue</label>
                   <input autoFocus type="text" placeholder="e.g. Broken window handle..." value={customText} onChange={(e) => setCustomText(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-medium" />
                 </div>
               )}
+
               {isDuplicate ? (
                 <div className="w-full bg-orange-50 border border-orange-100 text-orange-800 p-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
                   <Loader2 className="animate-spin text-orange-600" />
