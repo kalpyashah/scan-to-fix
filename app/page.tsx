@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight, ChevronUp } from "lucide-react"
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight } from "lucide-react"
 import { createClient } from '@supabase/supabase-js'
 
 // --- SUPABASE SETUP ---
@@ -211,30 +211,30 @@ function HomeContent() {
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="bg-blue-600 px-6 py-10 pb-20 rounded-b-[2.5rem] shadow-lg relative overflow-hidden z-10">
+      {/* HEADER (UPDATED STYLE) */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-600 px-6 py-10 pb-32 rounded-b-[3rem] shadow-2xl shadow-blue-900/20 relative overflow-hidden z-10">
         <div className="relative z-10 flex justify-between items-start">
           <div>
             <p className="text-blue-100 text-sm font-medium uppercase tracking-wider mb-1">Location</p>
             <h1 className="text-3xl font-extrabold text-white tracking-tight">{roomName}</h1>
           </div>
           {/* HISTORY BUTTON */}
-          <button onClick={() => setIsHistoryOpen(true)} className="bg-blue-500/50 p-3 rounded-xl hover:bg-blue-500 text-white transition-colors backdrop-blur-md border border-blue-400/30">
+          <button onClick={() => setIsHistoryOpen(true)} className="bg-white/10 p-3 rounded-xl hover:bg-white/20 text-white transition-colors backdrop-blur-md border border-white/20">
             <History className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      <div className="px-6 -mt-14 relative z-20 space-y-6">
+      <div className="px-6 -mt-16 relative z-20 space-y-6">
         
         {/* RECENT UPDATES TRIGGER (Only shows if recent history exists) */}
         {recentHistory.length > 0 && (
           <button 
             onClick={() => setIsRecentOpen(true)}
-            className="w-full bg-white rounded-2xl p-4 shadow-lg border border-blue-100 animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between group active:scale-95 transition-all"
+            className="w-full bg-white rounded-2xl p-4 shadow-xl shadow-blue-900/5 border border-white animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between group active:scale-95 transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 p-2 rounded-full">
+              <div className="bg-blue-50 text-blue-600 p-2 rounded-full">
                 <Bell className="w-5 h-5" />
               </div>
               <div className="text-left">
@@ -247,7 +247,7 @@ function HomeContent() {
         )}
 
         {/* ISSUE GRID */}
-        <div className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-gray-100">
           <h2 className="text-gray-800 font-bold text-lg mb-6 flex items-center gap-2"><AlertCircle className="w-5 h-5 text-orange-500" /> What is broken?</h2>
           <div className="grid grid-cols-2 gap-4">
             <IssueButton icon={<Fan />} label="Fan" isSelected={selectedIssue === "Fan"} onClick={() => setSelectedIssue("Fan")} />
