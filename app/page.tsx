@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, Calendar, ChevronRight } from "lucide-react"
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight } from "lucide-react"
 import { createClient } from '@supabase/supabase-js'
 
 // --- SUPABASE SETUP ---
@@ -31,12 +31,12 @@ function HomeContent() {
   
   // DATA
   const [pendingIssues, setPendingIssues] = useState<string[]>([]) 
-  const [recentHistory, setRecentHistory] = useState<Report[]>([]) // Last 24h
-  const [fullHistory, setFullHistory] = useState<Report[]>([])     // Everything else
+  const [recentHistory, setRecentHistory] = useState<Report[]>([]) 
+  const [fullHistory, setFullHistory] = useState<Report[]>([])     
   
   // MODALS
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false) // Toggle full history view
-  const [viewJob, setViewJob] = useState<Report | null>(null) // The specific job clicked
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false) 
+  const [viewJob, setViewJob] = useState<Report | null>(null) 
 
   // 1. ON LOAD
   useEffect(() => {
@@ -61,7 +61,6 @@ function HomeContent() {
     const { data: history } = await supabase.from('reports').select('*').eq('room_id', roomName).eq('status', 'Completed').order('solved_at', { ascending: false })
     
     if (history) {
-      // Split into "Recent (24h)" and "Older"
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       setRecentHistory(history.filter(h => h.solved_at > oneDayAgo))
       setFullHistory(history)
@@ -99,7 +98,6 @@ function HomeContent() {
     }
   }
 
-  // Helper for cleaner dates
   const formatDateTime = (dateString: string) => {
     if (!dateString) return "N/A"
     return new Date(dateString).toLocaleDateString('en-GB', { 
@@ -123,9 +121,7 @@ function HomeContent() {
               </div>
               <button onClick={() => setViewJob(null)} className="bg-slate-800 p-2 rounded-full text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
-            
             <div className="p-6 space-y-6">
-              {/* Timeline */}
               <div className="relative border-l-2 border-slate-100 ml-3 space-y-8 py-2">
                 <div className="relative pl-6">
                   <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-200 border-2 border-white"></div>
@@ -139,7 +135,6 @@ function HomeContent() {
                 </div>
               </div>
             </div>
-
             <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
               <button onClick={() => setViewJob(null)} className="text-slate-500 font-semibold text-sm hover:text-slate-800">Close</button>
             </div>
@@ -204,15 +199,16 @@ function HomeContent() {
 
       <div className="px-6 -mt-14 relative z-20 space-y-6">
         
-        {/* RECENT UPDATES (Last 24h) */}
+        {/* RECENT UPDATES (Last 24h) - WITH SCROLL FIX */}
         {recentHistory.length > 0 && (
           <div className="bg-white rounded-2xl p-5 shadow-lg border border-blue-100 animate-in fade-in slide-in-from-bottom-4">
             <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-3 flex items-center gap-2">
               <Clock className="w-4 h-4" /> Recent Updates (24h)
             </h2>
-            <div className="space-y-3">
+            {/* FIXED HEIGHT SCROLL CONTAINER */}
+            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1"> 
               {recentHistory.map((job) => (
-                <div key={job.id} onClick={() => setViewJob(job)} className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors">
+                <div key={job.id} onClick={() => setViewJob(job)} className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <div className="bg-green-100 p-1.5 rounded-full"><CheckCircle className="w-4 h-4 text-green-600" /></div>
                     <span className="font-bold text-slate-700">{job.issue.replace("Other: ", "")}</span>
