@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight } from "lucide-react"
+import { Fan, Snowflake, Lightbulb, Plug, Projector, CheckCircle, Loader2, AlertCircle, X, Bell, Clock, History, PenTool, ChevronRight, ChevronUp } from "lucide-react"
 import { createClient } from '@supabase/supabase-js'
 
 // --- SUPABASE SETUP ---
@@ -35,8 +35,9 @@ function HomeContent() {
   const [fullHistory, setFullHistory] = useState<Report[]>([])     
   
   // MODALS
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false) 
-  const [viewJob, setViewJob] = useState<Report | null>(null) 
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false) // Full History
+  const [isRecentOpen, setIsRecentOpen] = useState(false)   // Recent Updates
+  const [viewJob, setViewJob] = useState<Report | null>(null) // Specific Job Detail
 
   // 1. ON LOAD
   useEffect(() => {
@@ -110,9 +111,9 @@ function HomeContent() {
   return (
     <main className="min-h-screen bg-gray-50 font-sans pb-48 relative">
       
-      {/* --- MODAL: JOB DETAILS --- */}
+      {/* --- MODAL: JOB DETAILS POPUP --- */}
       {viewJob && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95">
             <div className="bg-slate-900 p-6 flex justify-between items-start">
               <div>
@@ -142,11 +143,38 @@ function HomeContent() {
         </div>
       )}
 
+      {/* --- MODAL: RECENT UPDATES LIST --- */}
+      {isRecentOpen && (
+        <div className="fixed inset-0 z-[60] bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
+          <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Recent Updates</h2>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Last 24 Hours</p>
+            </div>
+            <button onClick={() => setIsRecentOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-6 h-6 text-gray-600" /></button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-3">
+            {recentHistory.map(job => (
+              <div key={job.id} onClick={() => setViewJob(job)} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between active:scale-95 transition-transform">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-full"><CheckCircle className="w-5 h-5 text-green-600" /></div>
+                  <div>
+                    <p className="font-semibold text-slate-700">{job.issue.replace("Other: ", "")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Fixed {new Date(job.solved_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* --- MODAL: FULL HISTORY LIST --- */}
       {isHistoryOpen && (
         <div className="fixed inset-0 z-[50] bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
           <div className="bg-white px-6 py-6 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0">
-            <h2 className="text-xl font-bold text-slate-800">Repair History</h2>
+            <h2 className="text-xl font-bold text-slate-800">Full Archive</h2>
             <button onClick={() => setIsHistoryOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-6 h-6 text-gray-600" /></button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-3">
@@ -199,25 +227,23 @@ function HomeContent() {
 
       <div className="px-6 -mt-14 relative z-20 space-y-6">
         
-        {/* RECENT UPDATES (Last 24h) - WITH SCROLL FIX */}
+        {/* RECENT UPDATES TRIGGER (Only shows if recent history exists) */}
         {recentHistory.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-lg border border-blue-100 animate-in fade-in slide-in-from-bottom-4">
-            <h2 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4" /> Recent Updates (24h)
-            </h2>
-            {/* FIXED HEIGHT SCROLL CONTAINER */}
-            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1"> 
-              {recentHistory.map((job) => (
-                <div key={job.id} onClick={() => setViewJob(job)} className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 p-1.5 rounded-full"><CheckCircle className="w-4 h-4 text-green-600" /></div>
-                    <span className="font-bold text-slate-700">{job.issue.replace("Other: ", "")}</span>
-                  </div>
-                  <span className="text-xs text-blue-400 font-medium">View</span>
-                </div>
-              ))}
+          <button 
+            onClick={() => setIsRecentOpen(true)}
+            className="w-full bg-white rounded-2xl p-4 shadow-lg border border-blue-100 animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between group active:scale-95 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 text-blue-600 p-2 rounded-full">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-sm font-bold text-slate-800">Recent Updates</h2>
+                <p className="text-xs text-slate-500">{recentHistory.length} issues fixed in last 24h</p>
+              </div>
             </div>
-          </div>
+            <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+          </button>
         )}
 
         {/* ISSUE GRID */}
