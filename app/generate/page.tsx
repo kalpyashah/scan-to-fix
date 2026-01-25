@@ -9,24 +9,22 @@ export default function QRGenerator() {
   const [type, setType] = useState<"class" | "lab">("class")
   const [baseUrl, setBaseUrl] = useState("")
 
-  // Get the actual domain (localhost or vercel app)
+  // Get the actual domain
   useEffect(() => {
     setBaseUrl(window.location.origin)
   }, [])
 
-  // Construct the correct URL based on selection
   const targetUrl = type === "lab" 
     ? `${baseUrl}/lab?room=${roomId}` 
     : `${baseUrl}/?room=${roomId}`
 
   return (
-    <div className="min-h-screen bg-slate-100 p-8 font-sans flex flex-col items-center">
+    <div className="min-h-screen bg-slate-100 p-8 font-sans flex flex-col items-center justify-center">
       
-      {/* --- CONTROLS (Hidden when printing) --- */}
+      {/* --- NO-PRINT AREA: CONTROLS --- */}
       <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md mb-10 print:hidden space-y-6">
         <h1 className="text-2xl font-bold text-slate-800 text-center">QR Sticker Maker</h1>
         
-        {/* Room Input */}
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Room Number</label>
           <input 
@@ -37,7 +35,6 @@ export default function QRGenerator() {
           />
         </div>
 
-        {/* Type Toggle */}
         <div className="grid grid-cols-2 gap-2">
           <button 
             onClick={() => setType("class")}
@@ -53,36 +50,39 @@ export default function QRGenerator() {
           </button>
         </div>
 
-        {/* Print Button */}
         <button onClick={() => window.print()} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-900 transition-all">
           <Printer className="w-5 h-5" /> Print Sticker
         </button>
+        
+        <p className="text-xs text-center text-slate-400">
+          Note: Make sure "Background Graphics" is checked in your print settings if colors are missing.
+        </p>
       </div>
 
-      {/* --- THE STICKER (This is what gets printed) --- */}
-      <div className="print:absolute print:top-0 print:left-0 print:w-full print:h-full print:flex print:items-center print:justify-center">
-        
-        <div className={`relative w-[300px] h-[400px] bg-white rounded-[2rem] shadow-2xl overflow-hidden border-4 flex flex-col items-center text-center p-8 print:shadow-none print:border-4 ${type === 'lab' ? 'border-indigo-600' : 'border-blue-600'}`}>
+      {/* --- PRINT AREA: THE STICKER --- */}
+      {/* We center it on screen for preview, but control it via CSS for printing */}
+      <div className="print-container">
+        <div className={`sticker-card relative w-[300px] h-[420px] bg-white rounded-[2rem] shadow-2xl overflow-hidden border-4 flex flex-col items-center text-center p-8 print:shadow-none ${type === 'lab' ? 'border-indigo-600' : 'border-blue-600'}`}>
           
           {/* Header */}
           <div className="mb-6">
-            <h2 className={`text-3xl font-black uppercase tracking-tighter ${type === 'lab' ? 'text-indigo-600' : 'text-blue-600'}`}>
-              Something<br/>Broken?
+            <h2 className={`text-3xl font-black uppercase tracking-tighter leading-none mb-2 ${type === 'lab' ? 'text-indigo-600' : 'text-blue-600'}`}>
+              Scan To<br/>Report
             </h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">Scan to Report</p>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">Maintenance Request</p>
           </div>
 
           {/* QR Code Area */}
-          <div className="bg-white p-2 rounded-2xl">
+          <div className="bg-white p-2 rounded-xl mb-auto">
             <QRCode 
               value={targetUrl} 
-              size={180} 
-              fgColor={type === 'lab' ? '#4f46e5' : '#2563eb'} // Indigo or Blue QR
+              size={160} 
+              fgColor={type === 'lab' ? '#4f46e5' : '#2563eb'} 
             />
           </div>
 
           {/* Footer Room ID */}
-          <div className={`mt-auto w-full py-3 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-xl ${type === 'lab' ? 'bg-indigo-600' : 'bg-blue-600'}`}>
+          <div className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-2xl print-color-force ${type === 'lab' ? 'bg-indigo-600' : 'bg-blue-600'}`}>
             <MapPin className="w-6 h-6" /> {roomId}
           </div>
 
@@ -91,11 +91,37 @@ export default function QRGenerator() {
 
       <style jsx global>{`
         @media print {
-          body * { visibility: hidden; }
-          .print\\:absolute, .print\\:absolute * { visibility: visible; }
-          .print\\:absolute { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-          .print\\:hidden { display: none; }
-          body { background: white; }
+          /* 1. Hide the Next.js wrapper and body padding */
+          body {
+            background: white;
+            padding: 0;
+            margin: 0;
+          }
+          
+          /* 2. Hide all non-print elements explicitly */
+          .print\\:hidden {
+            display: none !important;
+          }
+
+          /* 3. Center the sticker on the paper */
+          .print-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          /* 4. FORCE BACKGROUND COLORS (The Magic Fix) */
+          .sticker-card, .print-color-force {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
         }
       `}</style>
 
